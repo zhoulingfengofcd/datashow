@@ -11,18 +11,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.qingting.customer.entity.Monitor;
+import com.qingting.customer.common.pojo.hbasedo.Monitor;
+import com.qingting.customer.dao.MonitorDAO;
+import com.qingting.customer.dao.impl.MonitorDAOImpl;
 import com.qingting.kafka.ConsumerBase;
 
 @Controller
 @RequestMapping("/monitor")
 public class MonitorController {
+	MonitorDAO monitorDAO=new MonitorDAOImpl();
 	private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
 	@RequestMapping(method = RequestMethod.GET)
 	public String execute(){
 		return "index";
 	}
 	@RequestMapping(value="/list",method = RequestMethod.GET)
+	@ResponseBody
+	public List<Monitor> list(){
+		return monitorDAO.listMonitor();
+	}
+	/*@RequestMapping(value="/list",method = RequestMethod.GET)
 	@ResponseBody
 	public List<Monitor> list(){
 		List<Monitor> list=null; 
@@ -60,7 +68,7 @@ public class MonitorController {
 			}	
 		}
 		return list;
-	}
+	}*/
 	/**  
 	    * byte数组中取int数值，本方法适用于(低位在前，高位在后)的顺序，和和intToBytes（）配套使用 
 	    *   

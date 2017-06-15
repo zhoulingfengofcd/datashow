@@ -22,24 +22,24 @@
 			<artifactId>smart-mvc</artifactId>
 			<version>1.0.0</version>
 		</dependency>-->
-		<!-- dao支持 
+		<!-- dao支持 -->
 		<dependency>
 			<groupId>com.qingting.customer</groupId>
 			<artifactId>customer-common-pojo</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+		</dependency> 
 		
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.qingting.customer</groupId>
 			<artifactId>customer-dao-api</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+		</dependency> -->
 		
 		<dependency>
 			<groupId>com.qingting.customer</groupId>
 			<artifactId>customer-hbase-orm</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-		</dependency>-->
+		</dependency>
 		<!-- Json处理 -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
