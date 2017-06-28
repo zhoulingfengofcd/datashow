@@ -79,7 +79,12 @@
 				        key.innerHTML = data[i].equipId;
 				        
 				        var value_data = row.insertCell(1);
+				        /* var str;
+				        $.each(data[i].data,function(key,value){
+				        	str+=value+" ";
+				        }) */
 				        value_data.innerHTML = data[i].data;
+				        //console.log("str:"+str);
 				        console.log("value_data:"+data[i].data);
 				        
 				        var value_date = row.insertCell(2);
@@ -101,8 +106,8 @@
 	<body>
 		<table id="table1" border="1" cellspacing="0">
 			<tr>
-				<th width="20%">设备ID</th>
-				<th width="20%">监测数据</th>
+				<th >设备ID</th>
+				<th >监测数据</th>
 				<th width="20%">时间</th>
 			</tr>
 		</table>

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.qingting.customer.common.pojo.hbasedo.Monitor;
 import com.qingting.customer.dao.MonitorDAO;
 import com.qingting.customer.dao.impl.MonitorDAOImpl;
+import com.qingting.customer.dto.MonitorDTO;
 import com.qingting.kafka.ConsumerBase;
 
 @Controller
@@ -27,8 +28,27 @@ public class MonitorController {
 	}
 	@RequestMapping(value="/list",method = RequestMethod.GET)
 	@ResponseBody
-	public List<Monitor> list(){
-		return monitorDAO.listMonitor();
+	public List<MonitorDTO> list(){
+		List<MonitorDTO> list=new ArrayList<MonitorDTO>();
+		List<Monitor> listMonitor = monitorDAO.listMonitor(); 
+		for (Monitor monitor : listMonitor) {
+			MonitorDTO monitorDTO=new MonitorDTO();
+			monitorDTO.setEquipId(monitor.getEquipId());
+			monitorDTO.setDate(monitor.getDate());
+			String str=new String();
+			for (byte b : monitor.getData().getBytes()) {
+				str+=b+" ";
+			}
+			monitorDTO.setData(str);
+			
+			/*System.out.println("");
+			for (byte b : monitor.getData().getBytes()) {
+				System.out.print(b+" ");
+			}
+			System.out.println("");*/
+			list.add(monitorDTO);
+		}
+		return  list;
 	}
 	/*@RequestMapping(value="/list",method = RequestMethod.GET)
 	@ResponseBody

@@ -35,7 +35,7 @@ public class ConsumerBase extends HttpServlet{
 	static{
 		props = new Properties();
 		
-		props.put("bootstrap.servers", "119.29.225.162:9092");
+		props.put("bootstrap.servers", "39.108.52.201:9092");
         System.out.println("this is the group part test 1");
         //消费者的组id
         props.put("group.id", "GroupA");//这里是GroupA或者GroupB
