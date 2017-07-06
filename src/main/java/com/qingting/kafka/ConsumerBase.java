@@ -1,5 +1,6 @@
 package com.qingting.kafka;
 
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -12,6 +13,7 @@ import java.util.Properties;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServlet;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -20,7 +22,30 @@ import com.qingting.customer.common.pojo.hbasedo.Monitor;
 import com.qingting.customer.dao.MonitorDAO;
 import com.qingting.customer.dao.impl.MonitorDAOImpl;
 
+
 public class ConsumerBase extends HttpServlet{
+	
+	/** 7位ASCII字符，也叫作ISO646-US、Unicode字符集的基本拉丁块 */
+	 public static final String US_ASCII = "US-ASCII";
+
+	 /** ISO 拉丁字母表 No.1，也叫作 ISO-LATIN-1 */
+	 public static final String ISO_8859_1 = "ISO-8859-1";
+
+	 /** 8 位 UCS 转换格式 */
+	 public static final String UTF_8 = "UTF-8";
+
+	 /** 16 位 UCS 转换格式，Big Endian（最低地址存放高位字节）字节顺序 */
+	 public static final String UTF_16BE = "UTF-16BE";
+
+	 /** 16 位 UCS 转换格式，Little-endian（最高地址存放低位字节）字节顺序 */
+	 public static final String UTF_16LE = "UTF-16LE";
+
+	 /** 16 位 UCS 转换格式，字节顺序由可选的字节顺序标记来标识 */
+	 public static final String UTF_16 = "UTF-16";
+
+	 /** 中文超大字符集 */
+	 public static final String GBK = "GBK";
+	
 	
 	//@Resource
 	//MonitorDAO monitorDAO;
@@ -28,9 +53,9 @@ public class ConsumerBase extends HttpServlet{
 	
 	private static final long serialVersionUID = 6482582654527221173L;
 	static final int maxSize = 20;
-	public static Map<String,String> monitorMap=null;
+	public static Map<String,byte[]> monitorMap=null;
 	static private Properties props =null;
-	static private KafkaConsumer<String, String> consumer =null;
+	static private KafkaConsumer<String, byte[]> consumer =null;
 	
 	static{
 		props = new Properties();
@@ -50,17 +75,17 @@ public class ConsumerBase extends HttpServlet{
 
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArrayDeserializer");
 
-        consumer = new KafkaConsumer<String, String>(props);
+        consumer = new KafkaConsumer<String, byte[]>(props);
         //订阅主题列表topic
         consumer.subscribe(Arrays.asList("monitor"));
 	}
 	public void init(){
-		monitorMap = new LinkedHashMap<String, String>(){
+		monitorMap = new LinkedHashMap<String, byte[]>(){
 	            private static final long    serialVersionUID    = 1L;
 	            @Override
-	            protected boolean removeEldestEntry(Map.Entry<String, String> pEldest) {
+	            protected boolean removeEldestEntry(Map.Entry<String, byte[]> pEldest) {
 	                return size() > maxSize;
 	            }
         };
@@ -68,10 +93,11 @@ public class ConsumerBase extends HttpServlet{
 			@Override
 			public void run() {
 				while (true) {
-		            ConsumerRecords<String, String> records = consumer.poll(100);
-		            for (ConsumerRecord<String, String> record : records){
+		            ConsumerRecords<String, byte[]> records = consumer.poll(100);
+		            for (ConsumerRecord<String, byte[]> record : records){
 		                //　正常这里应该使用线程池处理，不应该在这里处理
 		            	monitorMap.put(record.key(), record.value());
+		            	System.out.println("Monitor:"+converter(record.key(),record.value()));
 		            	monitorDAO.insertMonitor(converter(record.key(),record.value()));
 		                System.out.printf("offset = %d, key = %s, value = %s", record.offset(), record.key(), record.value()+"\n");
 		            }	
@@ -79,26 +105,112 @@ public class ConsumerBase extends HttpServlet{
 			}
         }).start();
 	}
-	public Monitor converter(String key,String value){
-		String[] split = key.split(":");
+	/**
+	 * 
+	 * @Title: getDate
+	 * @Description: 获得一个指定年月日时分秒+固定000毫秒的时间对象
+	 * @param year
+	 * @param month
+	 * @param date
+	 * @param hourOfDay
+	 * @param minute
+	 * @param second
+	 * @return 
+	 * @return Calendar
+	 * @throws
+	 */
+	public Calendar getDate(int year, int month, int date,
+			int hourOfDay, int minute, int second) {
+		Date d = null;
+		try {
+			d = new SimpleDateFormat("SSS").parse("000");
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(d);
+		cal.set(year, month - 1, date, hourOfDay, minute, second);
+		return cal;
+	}
+	public static long bytesToLong(byte[] byteNum,int index,int length) {  
+	    long num = 0;  
+	    for (int ix = 0; ix < length; ix++) {  
+	        num <<= 8;  
+	        num |= ( byteNum[index+ix] & 0xff); 
+	    }  
+	    return num;  
+	}  
+	public Monitor converterPayload(byte[] value){
+		System.out.print("收到的值:");
+		for (byte b : value) {
+			System.out.print(b+" ");
+		}
+		System.out.println("");
+		Monitor monitor=new Monitor();
+		//时间
+		monitor.setCreateTime(getDate(value[0]+2000, value[1], value[2], value[3], value[4], value[5]));
+		//继电器电磁阀状态
+		monitor.setLeak((value[6]&0x08)==0x08);
+		monitor.setMagnetic((value[6]&0x04)==0x04);
+		monitor.setOutRelay((value[6]&0x02)==0x02);
+		monitor.setPowerRelay((value[6]&0x01)==0x01);
+		//流量
+		monitor.setFlow(bytesToLong(value,7,6));
+		//原水TDS
+		int rawTds=0;
+		rawTds=(value[13]&0xff);
+		rawTds<<=8;
+		rawTds|=(value[14]&0xff);
+		monitor.setRawTds(rawTds/10f);
+		//净水TDS
+		int purTds=0;
+		purTds=(value[15]&0xff);
+		purTds<<=8;
+		purTds|=(value[16]&0xff);
+		monitor.setPurTds(purTds/10f);
+		//温度
+		monitor.setTemp((byte)(value[17]-50));
+		//湿度
+		monitor.setHumidity(value[18]);
+		return monitor;
+	}
+	/**
+	  * 字符串编码转换的实现方法
+	  * @param str  待转换编码的字符串
+	  * @param newCharset 目标编码
+	  * @return
+	  * @throws UnsupportedEncodingException
+	  */
+	public String changeCharset(String str, String newCharset) throws UnsupportedEncodingException {
+		if (str != null) {
+			//用默认字符编码解码字符串。
+			byte[] bs = str.getBytes();
+			//用新的字符编码生成字符串
+			return new String(bs, newCharset);
+		}
+		return null;
+	}
+	public Monitor converter(String key,byte[] value){
+		int splitIndex=key.indexOf(':');  
+		String clientId=key.substring(0, splitIndex);
+		String packgeId=key.substring(splitIndex+1);
+		
 		Monitor monitor;
-		if(split.length==2){
-			monitor=new Monitor();
-			//date
-			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
-			String dataStr = format.format(Long.valueOf(split[1]));
-			Date date=null;
-			try {
-				date = format.parse(dataStr);
-			} catch (ParseException e) {
+		if(clientId!=null){
+			monitor=converterPayload(value);
+			String utf8ClientId=null;
+			/*try {
+				utf8ClientId=this.changeCharset(clientId, US_ASCII);
+			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
-			}
-			Calendar calendar = Calendar.getInstance();
-			calendar.setTime(date);
-			monitor.setCalendar(calendar);
-			monitor.setDate(dataStr);
-			//data
-			monitor.setData(value);
+			}*/
+			utf8ClientId=clientId;
+			monitor.setEquipCode(utf8ClientId);
+			
+			
+			
+			
+			/*monitor.setData(value);
 			
 			//ID+(date+data)
 			int id=0;
@@ -119,7 +231,7 @@ public class ConsumerBase extends HttpServlet{
 					break;
 				}
 			}
-			monitor.setEquipId(id);
+			monitor.setEquipId(id);*/
 			return monitor;
 		}else{
 			throw new RuntimeException("The data format error.reference 12:456.key="+key);

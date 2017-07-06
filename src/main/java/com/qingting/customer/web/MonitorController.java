@@ -28,27 +28,13 @@ public class MonitorController {
 	}
 	@RequestMapping(value="/list",method = RequestMethod.GET)
 	@ResponseBody
-	public List<MonitorDTO> list(){
-		List<MonitorDTO> list=new ArrayList<MonitorDTO>();
+	public List<Monitor> list(){
 		List<Monitor> listMonitor = monitorDAO.listMonitor(); 
 		for (Monitor monitor : listMonitor) {
-			MonitorDTO monitorDTO=new MonitorDTO();
-			monitorDTO.setEquipId(monitor.getEquipId());
-			monitorDTO.setDate(monitor.getDate());
-			String str=new String();
-			for (byte b : monitor.getData().getBytes()) {
-				str+=b+" ";
-			}
-			monitorDTO.setData(str);
-			
-			/*System.out.println("");
-			for (byte b : monitor.getData().getBytes()) {
-				System.out.print(b+" ");
-			}
-			System.out.println("");*/
-			list.add(monitorDTO);
+			SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
+			monitor.setTime(format.format(monitor.getCreateTime().getTime()));
 		}
-		return  list;
+		return  listMonitor;
 	}
 	/*@RequestMapping(value="/list",method = RequestMethod.GET)
 	@ResponseBody

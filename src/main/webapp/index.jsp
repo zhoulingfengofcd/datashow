@@ -7,44 +7,13 @@
 		<script type="text/javascript">
 			$(function(){
 				function updateTable(){
-					/*Ajax({
-						//"type":"post", //默认get
-						"type":"get",
-						"url":"${pageContext.request.contextPath }/monitor/list",
-						//"data":{"adminId":0},
-						"dataType":"json",
-						"autoCloseProgress":false, //success回调函数执行结束再关闭进度条
-						"progressText":"正在发送请求...", //进度条显示文本
-						"timeout":30000, //超时设置30s
-						"successText":"操作成功！",
-						"success":function(result){
-							//obj=eval("("+result+")");
-							$.each(
-								result,
-								function(index,element){
-									console.log("处理结果："+index+element);
-								}
-							);
-							//console.log("处理结果："+result.monitor);
-							//$("#admin_table").datagrid("load");
-						}
-					});*/
 					$.ajax({
 						"type":"get",
 						"url":"${pageContext.request.contextPath }/monitor/list",
 						//"data":{"adminId":0},
 						"dataType":"json",
 						"success":function(result){
-							//obj=eval("("+result+")");
-							/*$.each(
-								result,
-								function(key,value){
-									console.log("处理结果："+key+value);
-								}
-							);*/
 							update(result);
-							//console.log("处理结果："+result.monitor);
-							//$("#admin_table").datagrid("load");
 						}
 					});
 				}
@@ -52,53 +21,46 @@
 				function update(data){
 					var tb = document.getElementById("table1");
 				    //删除原先数据，2 为保留表头，值为表头行数减1
-				    for (var n = tb.rows.length - 1; n > 1; n--) {
+				    for (var n = tb.rows.length-1 ; n > 0; n--) {
 				        tb.deleteRow(n);
 				    }
-				    
-				    /*$.each(
-						data,
-						function(key,value){
-							console.log("处理结果："+key+value);
-							alert("处理结果1："+key+value);
-							var row = tb.insertRow(tb.rows.length);
-					        var key = row.insertCell(0);
-					        key.innerHTML = key;
-					        var value = row.insertCell(1);
-					        value.innerHTML = value.;
-						}
-					);*/
-					var temp;
-					var result;
-					for(var i in data){//用javascript的for/in循环遍历对象的属性 
-						temp += i+":"+data[i]+"\n"; 
+					$.each(data,function(index,element){//用javascript的for/in循环遍历对象的属性 
 						var row = tb.insertRow(1);
 						
-						
-				        var key = row.insertCell(0);
-				        key.innerHTML = data[i].equipId;
+				        var equipCode = row.insertCell(0);
+				        equipCode.innerHTML = element.equipCode;
 				        
-				        var value_data = row.insertCell(1);
-				        /* var str;
-				        $.each(data[i].data,function(key,value){
-				        	str+=value+" ";
-				        }) */
-				        value_data.innerHTML = data[i].data;
-				        //console.log("str:"+str);
-				        console.log("value_data:"+data[i].data);
+				        var rawTds = row.insertCell(1);
+				        rawTds.innerHTML = element.rawTds;
 				        
-				        var value_date = row.insertCell(2);
-				        value_date.innerHTML = data[i].date;
-				        console.log("value_date:"+data[i].date);
-					} 
-				    console.log("处理结果："+temp);
-				   /*for (var i = 0; i < data.length; i++) {
-				        var row = tb.insertRow(tb.rows.length);
-				        var key = row.insertCell(0);
-				        key.innerHTML = data[i].a;
-				        var value = row.insertCell(1);
-				        value.innerHTML = data[i].d;
-				    }*/
+				        var purTds = row.insertCell(2);
+				        purTds.innerHTML = element.purTds;
+				        
+				        var temp = row.insertCell(3);
+				        temp.innerHTML = element.temp;
+				        
+				        var humidity = row.insertCell(4);
+				        humidity.innerHTML = element.humidity;
+				        
+				        var flow = row.insertCell(5);
+				        flow.innerHTML = element.flow;
+				        
+				        var leak = row.insertCell(6);
+				        leak.innerHTML = element.leak;
+				        
+				        var magnetic = row.insertCell(7);
+				        magnetic.innerHTML = element.magnetic;
+				        
+				        var outRelay = row.insertCell(8);
+				        outRelay.innerHTML = element.outRelay;
+				        
+				        var powerRelay = row.insertCell(9);
+				        powerRelay.innerHTML = element.powerRelay;
+				        
+				        var createTime = row.insertCell(10);
+				        createTime.innerHTML = element.time;
+					}); 
+				    console.log("数据条数:"+data.length);
 				}
 			});
 		</script>
@@ -106,9 +68,48 @@
 	<body>
 		<table id="table1" border="1" cellspacing="0">
 			<tr>
-				<th >设备ID</th>
-				<th >监测数据</th>
-				<th width="20%">时间</th>
+				<th>设备编号(ASCII编码,如二进制48为0)</th>
+				
+				
+	 			<th>原水TDS值</th>
+	 
+
+
+	 			<th>净水TDS值</th>
+	
+
+	
+	  			<th>温度值</th>
+	 
+
+	
+	  			<th>湿度值</th>
+	 
+
+	
+	  			<th>流量值</th>
+	 
+
+	
+	  			<th>漏水状态开关(true-漏水、false-无漏水)</th>
+	 
+	
+	
+	  			<th>电磁阀输出状态(true:电磁阀供电 false:电池阀不供电)</th>
+	 
+	
+	
+	 			<th> 输出继电器(true:闭合 false:断开)</th>
+	 
+	
+	
+	 			<th> 电源继电器 (true:有输出 false:无输出)</th>
+	 
+	
+	
+	  			<th>采集时间</th>
+	 
+				
 			</tr>
 		</table>
 		
