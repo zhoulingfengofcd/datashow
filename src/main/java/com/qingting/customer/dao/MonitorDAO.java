@@ -1,11 +1,11 @@
 package com.qingting.customer.dao;
 
-import java.util.List;
 
 import com.qingting.customer.common.pojo.hbasedo.Monitor;
+import com.qingting.customer.common.pojo.model.Pagination;
 
 
 public interface MonitorDAO {
 	void insertMonitor(Monitor monitor);
-	List<Monitor> listMonitor();
+	Pagination<Monitor> listMonitor(String equipCode,Integer pageNo,Integer pageSize);
 }

@@ -9,16 +9,25 @@ import java.util.Set;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.qingting.customer.common.pojo.hbasedo.Monitor;
+import com.qingting.customer.common.pojo.model.Pagination;
 import com.qingting.customer.dao.MonitorDAO;
 import com.qingting.customer.dao.impl.MonitorDAOImpl;
 import com.qingting.customer.dto.MonitorDTO;
 import com.qingting.kafka.ConsumerBase;
+import com.smart.mvc.model.ResultCode;
+import com.smart.mvc.model.WebResult;
+import com.smart.mvc.validator.Validator;
+import com.smart.mvc.validator.annotation.ValidateParam;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Controller
-@RequestMapping("/monitor")
+@RequestMapping("/admin/monitor")
 public class MonitorController {
 	MonitorDAO monitorDAO=new MonitorDAOImpl();
 	private static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
@@ -26,55 +35,33 @@ public class MonitorController {
 	public String execute(){
 		return "index";
 	}
-	@RequestMapping(value="/list",method = RequestMethod.GET)
-	@ResponseBody
-	public List<Monitor> list(){
-		List<Monitor> listMonitor = monitorDAO.listMonitor(); 
-		for (Monitor monitor : listMonitor) {
-			SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
-			monitor.setTime(format.format(monitor.getCreateTime().getTime()));
-		}
-		return  listMonitor;
-	}
 	/*@RequestMapping(value="/list",method = RequestMethod.GET)
 	@ResponseBody
-	public List<Monitor> list(){
-		List<Monitor> list=null; 
-		
-		Set<String> key = ConsumerBase.monitorMap.keySet();
-		for (String str : key) {//遍历ID+date
-			String[] split = str.split(":");
-			if(split.length==2){
-				if(list==null){
-					list=new ArrayList<Monitor>();
-				}
-				Monitor monitor=new Monitor();
-				//date
-				SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
-				String dataStr = format.format(Long.valueOf(split[1]));
-				monitor.setDate(dataStr);
-				//data
-				monitor.setData(ConsumerBase.monitorMap.get(str));
-				//ID+(date+data)
-				int id=0;
-				System.out.print("clientID:");
-				byte[] bytes = split[0].getBytes();
-				for (int i=0; i<bytes.length;i++) {
-					if(bytes[i]!=0){
-						id=bytesToInt(bytes,i,bytes.length-i);
-						System.out.println(id);
-						//monitor.setEquipId(id);
-						break;
-					}
-				}
-				monitor.setEquipId(id);
-				list.add(monitor);
-			}else{
-				throw new RuntimeException("The data format error.reference 12:456.key="+key);
-			}	
+	public Pagination<Monitor> list(
+			String equipCode,Integer pageNo,Integer pageSize
+			){
+		Pagination<Monitor> page = monitorDAO.listMonitor(equipCode,pageNo,pageSize); 
+		for (Monitor monitor : page.getList()) {
+			SimpleDateFormat format=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
+			System.out.println("Controller-monitor:"+monitor);
+			System.out.println("equipCode:"+monitor.getEquipCode()+" time:"+format.format(monitor.getCreateTime().getTime()));
+			monitor.setTime(format.format(monitor.getCreateTime().getTime()));
 		}
-		return list;
+		return  page;
 	}*/
+	@ApiOperation("查询所有监测值")
+	@RequestMapping(value="/list",method = RequestMethod.GET)
+	public @ResponseBody WebResult<Pagination<Monitor>> listMonitor(
+			@ApiParam(value = "设备编号", required = false) @RequestParam(value="equipCode", required=false) String equipCode,
+			@ApiParam(value = "开始页码", required = true) @RequestParam @ValidateParam({ Validator.NOT_BLANK }) Integer pageNo,
+			@ApiParam(value = "显示条数", required = true) @RequestParam @ValidateParam({ Validator.NOT_BLANK }) Integer pageSize
+			){
+		//别忘记验证传参和用户身份是否匹配
+		Pagination<Monitor> page = monitorDAO.listMonitor(equipCode,pageNo,pageSize);
+		WebResult<Pagination<Monitor>> result=new WebResult<Pagination<Monitor>>(ResultCode.SUCCESS);
+		result.setData(page);
+		return result;
+	}
 	/**  
 	    * byte数组中取int数值，本方法适用于(低位在前，高位在后)的顺序，和和intToBytes（）配套使用 
 	    *   

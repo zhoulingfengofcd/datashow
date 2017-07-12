@@ -22,8 +22,12 @@ import com.qingting.customer.common.pojo.hbasedo.Monitor;
 import com.qingting.customer.dao.MonitorDAO;
 import com.qingting.customer.dao.impl.MonitorDAOImpl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConsumerBase extends HttpServlet{
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerBase.class);
 	
 	/** 7位ASCII字符，也叫作ISO646-US、Unicode字符集的基本拉丁块 */
 	 public static final String US_ASCII = "US-ASCII";
@@ -96,10 +100,14 @@ public class ConsumerBase extends HttpServlet{
 		            ConsumerRecords<String, byte[]> records = consumer.poll(100);
 		            for (ConsumerRecord<String, byte[]> record : records){
 		                //　正常这里应该使用线程池处理，不应该在这里处理
-		            	monitorMap.put(record.key(), record.value());
-		            	System.out.println("Monitor:"+converter(record.key(),record.value()));
-		            	monitorDAO.insertMonitor(converter(record.key(),record.value()));
-		                System.out.printf("offset = %d, key = %s, value = %s", record.offset(), record.key(), record.value()+"\n");
+		            	try{
+			            	monitorMap.put(record.key(), record.value());
+			            	System.out.println("Monitor:"+converter(record.key(),record.value()));
+			            	monitorDAO.insertMonitor(converter(record.key(),record.value()));
+			                System.out.printf("offset = %d, key = %s, value = %s", record.offset(), record.key(), record.value()+"\n");
+		            	}catch(Exception e){
+		            		e.printStackTrace();
+		            	}
 		            }	
 		        }
 			}
@@ -141,14 +149,19 @@ public class ConsumerBase extends HttpServlet{
 	    return num;  
 	}  
 	public Monitor converterPayload(byte[] value){
-		System.out.print("收到的值:");
+		LOGGER.info("收到的数据:");
 		for (byte b : value) {
-			System.out.print(b+" ");
+			LOGGER.info("{} ",(int)b);
 		}
-		System.out.println("");
+		if(value.length!=19){
+			LOGGER.error("sp数据长度错误.");
+			throw new RuntimeException("sp data length error.length="+value.length);
+		}
+		
 		Monitor monitor=new Monitor();
 		//时间
-		monitor.setCreateTime(getDate(value[0]+2000, value[1], value[2], value[3], value[4], value[5]));
+		monitor.setCollectTime(getDate(value[0]+2000, value[1], value[2], value[3], value[4], value[5]));
+		monitor.setCreateTime(Calendar.getInstance());
 		//继电器电磁阀状态
 		monitor.setLeak((value[6]&0x08)==0x08);
 		monitor.setMagnetic((value[6]&0x04)==0x04);
@@ -199,42 +212,12 @@ public class ConsumerBase extends HttpServlet{
 		if(clientId!=null){
 			monitor=converterPayload(value);
 			String utf8ClientId=null;
-			/*try {
-				utf8ClientId=this.changeCharset(clientId, US_ASCII);
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}*/
 			utf8ClientId=clientId;
 			monitor.setEquipCode(utf8ClientId);
-			
-			
-			
-			
-			/*monitor.setData(value);
-			
-			//ID+(date+data)
-			int id=0;
-			byte[] bytes = split[0].getBytes();
-			for (int i=0; i<bytes.length;i++) {
-				if(bytes[i]!=0){
-					System.out.print("ID_length:");
-					System.out.print(bytes.length);
-					
-					System.out.print(" bytes:");
-					for(int j=0;j<bytes.length;j++){
-						System.out.print(bytes[j]+" ");
-					}
-					id=bytesToInt(bytes,i,bytes.length-i);
-					System.out.print(" clientID:");
-					System.out.println(id);
-					//monitor.setEquipId(id);
-					break;
-				}
-			}
-			monitor.setEquipId(id);*/
 			return monitor;
 		}else{
-			throw new RuntimeException("The data format error.reference 12:456.key="+key);
+			LOGGER.error("The key data format error.reference key={}.",key);
+			throw new RuntimeException("The key data format error.reference key="+key+".");
 		}
 	}
 	/**  
