@@ -1,10 +1,6 @@
 package com.qingting.customer.web;
 
 import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,8 +12,6 @@ import com.qingting.customer.common.pojo.hbasedo.Monitor;
 import com.qingting.customer.common.pojo.model.Pagination;
 import com.qingting.customer.dao.MonitorDAO;
 import com.qingting.customer.dao.impl.MonitorDAOImpl;
-import com.qingting.customer.dto.MonitorDTO;
-import com.qingting.kafka.ConsumerBase;
 import com.smart.mvc.model.ResultCode;
 import com.smart.mvc.model.WebResult;
 import com.smart.mvc.validator.Validator;

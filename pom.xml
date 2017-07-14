@@ -15,14 +15,10 @@
 		<spring.version>4.2.1.RELEASE</spring.version>
 		<spring-redis.version>1.2.2.RELEASE</spring-redis.version>
 		<smart.version>1.0.0</smart.version>
+		<customer.version>0.0.1-SNAPSHOT</customer.version>
 	</properties>
 	<dependencies>
-		<!-- 基础项目支持 
-		<dependency>
-			<groupId>com.smart</groupId>
-			<artifactId>smart-mvc</artifactId>
-			<version>1.0.0</version>
-		</dependency>-->
+		
 		<!-- sso单点登录客户端 -->
 		<dependency>
 			<groupId>com.smart</groupId>
@@ -33,19 +29,24 @@
 		<dependency>
 			<groupId>com.qingting.customer</groupId>
 			<artifactId>customer-common-pojo</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${customer.version}</version>
 		</dependency> 
 		
-		<!-- <dependency>
+		<dependency>
 			<groupId>com.qingting.customer</groupId>
 			<artifactId>customer-dao-api</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency> -->
+			<version>${customer.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.qingting.customer</groupId>
+			<artifactId>customer-dao-impl</artifactId>
+			<version>${customer.version}</version>
+		</dependency>
 		
 		<dependency>
 			<groupId>com.qingting.customer</groupId>
 			<artifactId>customer-hbase-orm</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${customer.version}</version>
 		</dependency>
 		<!-- Json处理 -->
 		<dependency>
