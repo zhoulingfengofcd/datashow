@@ -19,6 +19,26 @@
 	</properties>
 	<dependencies>
 		
+		<dependency>  
+		    <!-- <groupId>${project.groupId}</groupId>  
+		    <artifactId>B</artifactId>  
+		    <version>${project.version}</version>  
+		    <classifier>jar</classifier>  
+		    <scope>runtime</scope>  --> 
+		    
+		    <groupId>com.qingting.customer</groupId>
+			<artifactId>customer-server-impl</artifactId>
+			<version>${customer.version}</version>
+			
+			<classifier>jar</classifier>  
+		    <scope>runtime</scope>  
+		</dependency>  
+		<!-- sso单点登录客户端 -->
+		<dependency>
+			<groupId>com.smart</groupId>
+			<artifactId>smart-mvc</artifactId>
+			<version>${smart.version}</version>
+		</dependency>
 		<!-- sso单点登录客户端 -->
 		<dependency>
 			<groupId>com.smart</groupId>
@@ -31,6 +51,17 @@
 			<artifactId>customer-common-pojo</artifactId>
 			<version>${customer.version}</version>
 		</dependency> 
+		
+		<dependency>
+			<groupId>com.qingting.customer</groupId>
+			<artifactId>customer-server-api</artifactId>
+			<version>${customer.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.qingting.customer</groupId>
+			<artifactId>customer-server-impl</artifactId>
+			<version>${customer.version}</version>
+		</dependency>
 		
 		<dependency>
 			<groupId>com.qingting.customer</groupId>

@@ -3,6 +3,7 @@ package com.qingting.customer.web;
 import java.nio.charset.Charset;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,16 +45,14 @@ public class MonitorController {
 		return  page;
 	}*/
 	@ApiOperation("查询所有监测值")
-	@RequestMapping(value="/list",method = RequestMethod.GET)
+	@RequestMapping(value="/list",method = RequestMethod.POST)
 	public @ResponseBody WebResult<Pagination<Monitor>> listMonitor(
-			@ApiParam(value = "设备编号", required = false) @RequestParam(value="equipCode", required=false) String equipCode,
-			@ApiParam(value = "开始页码", required = true) @RequestParam @ValidateParam({ Validator.NOT_BLANK }) Integer pageNo,
-			@ApiParam(value = "显示条数", required = true) @RequestParam @ValidateParam({ Validator.NOT_BLANK }) Integer pageSize
+			@ApiParam(value = "page", required = true) @RequestBody Pagination<Monitor> page
 			){
 		//别忘记验证传参和用户身份是否匹配
-		Pagination<Monitor> page = monitorDAO.listMonitor(equipCode,pageNo,pageSize);
+		Pagination<Monitor> newPage = monitorDAO.listMonitor(page);
 		WebResult<Pagination<Monitor>> result=new WebResult<Pagination<Monitor>>(ResultCode.SUCCESS);
-		result.setData(page);
+		result.setData(newPage);
 		return result;
 	}
 	/**  

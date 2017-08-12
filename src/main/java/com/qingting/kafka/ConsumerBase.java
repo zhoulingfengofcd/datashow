@@ -6,8 +6,6 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.annotation.Resource;
@@ -17,13 +15,18 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.qingting.customer.baseserver.MonitorService;
+import com.qingting.customer.baseserver.impl.MonitorServiceImpl;
 import com.qingting.customer.common.pojo.hbasedo.Monitor;
 import com.qingting.customer.dao.MonitorDAO;
 import com.qingting.customer.dao.impl.MonitorDAOImpl;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.qingting.customer.service.CalculateService;
+import com.qingting.customer.service.CalculateServiceImpl;
+import com.smart.mvc.util.SpringUtils;
+import com.smart.sso.rpc.AuthenticationRpcService;
 
 public class ConsumerBase extends HttpServlet{
 	
@@ -53,11 +56,18 @@ public class ConsumerBase extends HttpServlet{
 	
 	//@Resource
 	//MonitorDAO monitorDAO;
-	MonitorDAO monitorDAO=new MonitorDAOImpl();
+	//MonitorDAO monitorDAO=new MonitorDAOImpl();
+	//@Resource
+	MonitorService monitorService=SpringUtils
+			.getBean(MonitorService.class);
+	//MonitorService monitorService=new MonitorServiceImpl();
 	
+	//@Resource
+	//CalculateService calculateService;
+	CalculateService calculateService=new CalculateServiceImpl();
 	private static final long serialVersionUID = 6482582654527221173L;
-	static final int maxSize = 20;
-	public static Map<String,byte[]> monitorMap=null;
+	//static final int maxSize = 20;
+	//public static Map<String,byte[]> monitorMap=null;
 	static private Properties props =null;
 	static private KafkaConsumer<String, byte[]> consumer =null;
 	
@@ -68,9 +78,13 @@ public class ConsumerBase extends HttpServlet{
         System.out.println("this is the group part test 1");
         //消费者的组id
         props.put("group.id", "GroupA");//这里是GroupA或者GroupB
-
-        props.put("enable.auto.commit", "true");
-        props.put("auto.commit.interval.ms", "1000");
+        //设置自动提交偏移量(offset),由auto.commit.interval.ms控制提交频率
+        props.put("enable.auto.commit", "false");//不自动提交offset
+        //设置使用最开始的offset偏移量为该group.id的最早。如果不设置，则会是latest即该topic最新一个消息的offset
+        //如果采用latest，消费者只能得道其启动后，生产者生产的消息
+        props.put("auto.offset.reset", "earliest");
+        //偏移量(offset)提交频率
+        //props.put("auto.commit.interval.ms", "1000");
 
         //从poll(拉)的回话处理时长
         props.put("session.timeout.ms", "30000");
@@ -86,13 +100,13 @@ public class ConsumerBase extends HttpServlet{
         consumer.subscribe(Arrays.asList("monitor"));
 	}
 	public void init(){
-		monitorMap = new LinkedHashMap<String, byte[]>(){
+		/*monitorMap = new LinkedHashMap<String, byte[]>(){
 	            private static final long    serialVersionUID    = 1L;
 	            @Override
 	            protected boolean removeEldestEntry(Map.Entry<String, byte[]> pEldest) {
 	                return size() > maxSize;
 	            }
-        };
+        };*/
         new Thread(new Runnable(){
 			@Override
 			public void run() {
@@ -101,14 +115,24 @@ public class ConsumerBase extends HttpServlet{
 		            for (ConsumerRecord<String, byte[]> record : records){
 		                //　正常这里应该使用线程池处理，不应该在这里处理
 		            	try{
-			            	monitorMap.put(record.key(), record.value());
-			            	System.out.println("Monitor:"+converter(record.key(),record.value()));
-			            	monitorDAO.insertMonitor(converter(record.key(),record.value()));
+			            	//monitorMap.put(record.key(), record.value());
+		            		Monitor monitor=converter(record.key(),record.value());
+			            	System.out.println("Monitor:"+monitor);
+			            	//monitorService.insertMonitor(monitor);
+			            	//monitorDAO.insertMonitor(calculateService.getResult(monitor));
+			            	//不存在才计算插入
+			            	if(!monitorService.isExist(monitor.getEquipCode(), monitor.getCollectTime())){
+			            		monitorService.insertMonitor(calculateService.getResult(monitor));
+			            	}else{
+			            		System.out.println("==============数据库已存在值=============");
+			            	}
 			                System.out.printf("offset = %d, key = %s, value = %s", record.offset(), record.key(), record.value()+"\n");
 		            	}catch(Exception e){
 		            		e.printStackTrace();
 		            	}
-		            }	
+		            }
+		            LOGGER.debug("处理完成，手动提交offset");
+		            consumer.commitSync();
 		        }
 			}
         }).start();

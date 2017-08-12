@@ -33,7 +33,81 @@
 	<import resource="spring-redis.xml"/>
 	
 	<!-- dao、service扫描包 -->
-	<context:component-scan base-package="com.qingting.customer.dao.impl" />
+	<!-- <context:component-scan base-package="com.qingting.customer.dao.impl" />
 	<context:component-scan base-package="com.qingting.kafka" />
+	<context:component-scan base-package="com.qingting.customer.dao.external.impl"/> -->
+	
+	<!-- <import resource="applicationContext-service.xml"/> -->
+	
+	<context:component-scan base-package="com.qingting.customer.dao.impl"/>
 	<context:component-scan base-package="com.qingting.customer.dao.external.impl"/>
+	<context:component-scan base-package="com.qingting.customer.baseserver.impl"/>
+	<context:component-scan base-package="com.qingting.customer.baseserver.external.impl"/>
+	
+	<bean id="equipDAO"  class="com.qingting.customer.dao.impl.EquipDAOImpl"/>
+	<bean id="monitorDAO"  class="com.qingting.customer.dao.impl.MonitorDAOImpl"/>
+	<bean id="monitorService" class="com.qingting.customer.baseserver.impl.MonitorServiceImpl">
+		<property name="equipDAO" ref="equipDAO"/>
+		<property name="monitorDAO" ref="monitorDAO"/>
+	</bean>
+	
+	
+	<context:component-scan base-package="com.qingting.kafka" />
+	
+	  
+     
+     
+    <!-- Redis缓存工具 -->
+	<bean id="equipRedisCache" class="com.smart.mvc.cache.RedisCache">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+	<bean id="waterAreaRedisCache" class="com.smart.mvc.cache.RedisCache">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+	<bean id="waterQualityRedisCache" class="com.smart.mvc.cache.RedisCache">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+	<bean id="filterGroupRedisCache" class="com.smart.mvc.cache.RedisCache">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+	<bean id="filterRedisCache" class="com.smart.mvc.cache.RedisCache">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+	<bean id="formulaRedisCache" class="com.smart.mvc.cache.RedisCache">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+	<bean id="microFormulaRedisCache" class="com.smart.mvc.cache.RedisCache">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+	<bean id="monitorRedisCache" class="com.smart.mvc.cache.RedisCache">
+		<property name="redisTemplate" ref="redisTemplate" />
+	</bean>
+	
+	<bean id="cacheUtil"  class="com.qingting.customer.baseserver.common.CacheUtil">
+	  	<property name="equipRedisCache" ref="equipRedisCache"/>
+	  	<property name="waterAreaRedisCache" ref="waterAreaRedisCache"/>
+	  	<property name="waterQualityRedisCache" ref="waterQualityRedisCache"/>
+	  	<property name="filterGroupRedisCache" ref="filterGroupRedisCache"/>
+	  	<property name="filterRedisCache" ref="filterRedisCache"/>
+	  	<property name="formulaRedisCache" ref="formulaRedisCache"/>
+	  	<property name="microFormulaRedisCache" ref="microFormulaRedisCache"/>
+	  	<property name="monitorRedisCache" ref="monitorRedisCache"/>
+	  	
+	  	<property name="monitorService" ref="monitorService"/>
+	  	<property name="equipService" ref="equipService"/>
+	  	<property name="waterAreaService" ref="waterAreaService"/>
+	  	<property name="waterQualityService" ref="waterQualityService"/>
+	  	<property name="filterGroupService" ref="filterGroupService"/>
+	  	<property name="filterService" ref="filterService"/>
+	  	<property name="formulaService" ref="formulaService"/>
+	  	<property name="microFormulaService" ref="microFormulaService"/>
+	</bean> 
+	
+	<bean id="calculateService"  class="com.qingting.customer.service.CalculateServiceImpl">
+	  	<property name="monitorRedisCache" ref="monitorRedisCache"/>
+	</bean>     
+	
+	<context:component-scan base-package="com.qingting.customer.service" />
+	<context:component-scan base-package="com.qingting.customer.baseserver.common"/>
+       
 </beans>
