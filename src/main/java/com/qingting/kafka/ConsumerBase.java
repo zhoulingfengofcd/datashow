@@ -69,7 +69,7 @@ public class ConsumerBase extends HttpServlet{
 	//static final int maxSize = 20;
 	//public static Map<String,byte[]> monitorMap=null;
 	static private Properties props =null;
-	static private KafkaConsumer<String, byte[]> consumer =null;
+	static private KafkaConsumer<String, String> consumer =null;
 	
 	static{
 		props = new Properties();
@@ -93,11 +93,12 @@ public class ConsumerBase extends HttpServlet{
 
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+        //props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
 
-        consumer = new KafkaConsumer<String, byte[]>(props);
+        consumer = new KafkaConsumer<String, String>(props);
         //订阅主题列表topic
-        consumer.subscribe(Arrays.asList("monitor"));
+        consumer.subscribe(Arrays.asList("Monitor_1"));
 	}
 	public void init(){
 		/*monitorMap = new LinkedHashMap<String, byte[]>(){
@@ -111,11 +112,11 @@ public class ConsumerBase extends HttpServlet{
 			@Override
 			public void run() {
 				while (true) {
-		            ConsumerRecords<String, byte[]> records = consumer.poll(100);
-		            for (ConsumerRecord<String, byte[]> record : records){
+		            ConsumerRecords<String, String> records = consumer.poll(100);
+		            for (ConsumerRecord<String, String> record : records){
 		                //　正常这里应该使用线程池处理，不应该在这里处理
 		            	try{
-			            	//monitorMap.put(record.key(), record.value());
+			            	/*//monitorMap.put(record.key(), record.value());
 		            		Monitor monitor=converter(record.key(),record.value());
 			            	System.out.println("Monitor:"+monitor);
 			            	//monitorService.insertMonitor(monitor);
@@ -125,7 +126,7 @@ public class ConsumerBase extends HttpServlet{
 			            		monitorService.insertMonitor(calculateService.getResult(monitor));
 			            	}else{
 			            		System.out.println("==============数据库已存在值=============");
-			            	}
+			            	}*/
 			                System.out.printf("offset = %d, key = %s, value = %s", record.offset(), record.key(), record.value()+"\n");
 		            	}catch(Exception e){
 		            		e.printStackTrace();
