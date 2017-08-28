@@ -19,20 +19,7 @@
 	</properties>
 	<dependencies>
 		
-		<dependency>  
-		    <!-- <groupId>${project.groupId}</groupId>  
-		    <artifactId>B</artifactId>  
-		    <version>${project.version}</version>  
-		    <classifier>jar</classifier>  
-		    <scope>runtime</scope>  --> 
-		    
-		    <groupId>com.qingting.customer</groupId>
-			<artifactId>customer-server-impl</artifactId>
-			<version>${customer.version}</version>
-			
-			<classifier>jar</classifier>  
-		    <scope>runtime</scope>  
-		</dependency>  
+		
 		<!-- sso单点登录客户端 -->
 		<dependency>
 			<groupId>com.smart</groupId>
@@ -57,11 +44,19 @@
 			<artifactId>customer-server-api</artifactId>
 			<version>${customer.version}</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.qingting.customer</groupId>
 			<artifactId>customer-server-impl</artifactId>
 			<version>${customer.version}</version>
-		</dependency>
+		</dependency> -->
+		<dependency>  
+		    <groupId>com.qingting.customer</groupId>
+			<artifactId>customer-server-impl</artifactId>
+			<version>${customer.version}</version>
+			<type>jar</type>
+			<classifier>api</classifier>  
+		    <scope>compile</scope>  
+		</dependency>  
 		
 		<dependency>
 			<groupId>com.qingting.customer</groupId>
@@ -159,6 +154,32 @@
 				<configuration>
 					<version>3.0</version>
 					<warName>/${project.artifactId}</warName>
+				</configuration>
+			</plugin>
+			
+			
+			
+			<plugin>
+				<groupId>org.apache.tomcat.maven</groupId>
+				<artifactId>tomcat7-maven-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<port>${server.port}</port>
+					<path>/${project.artifactId}</path>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>9.4.2.v20170220</version>
+				<configuration>
+					<scanIntervalSeconds>3</scanIntervalSeconds>
+					<webApp>
+						<contextPath>/${project.artifactId}</contextPath>
+					</webApp>
+					<httpConnector>
+						<port>${server.port}</port>
+					</httpConnector>
 				</configuration>
 			</plugin>
 		</plugins>

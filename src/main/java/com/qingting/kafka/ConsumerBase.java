@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import javax.annotation.Resource;
@@ -18,6 +19,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.qingting.customer.baseserver.MonitorService;
 import com.qingting.customer.baseserver.impl.MonitorServiceImpl;
 import com.qingting.customer.common.pojo.hbasedo.Monitor;
@@ -74,22 +77,28 @@ public class ConsumerBase extends HttpServlet{
 	static{
 		props = new Properties();
 		
-		props.put("bootstrap.servers", "39.108.52.201:9092");
+		props.put("bootstrap.servers", "39.108.131.8:9092");
         System.out.println("this is the group part test 1");
+        
         //消费者的组id
         props.put("group.id", "GroupA");//这里是GroupA或者GroupB
+        
         //设置自动提交偏移量(offset),由auto.commit.interval.ms控制提交频率
-        props.put("enable.auto.commit", "false");//不自动提交offset
+        props.put("enable.auto.commit", "true");//自动提交offset
+        
         //设置使用最开始的offset偏移量为该group.id的最早。如果不设置，则会是latest即该topic最新一个消息的offset
         //如果采用latest，消费者只能得道其启动后，生产者生产的消息
         props.put("auto.offset.reset", "earliest");
+        //props.put("auto.offset.reset", "latest");
+        
         //偏移量(offset)提交频率
-        //props.put("auto.commit.interval.ms", "1000");
+        props.put("auto.commit.interval.ms", "60000");
 
         //从poll(拉)的回话处理时长
         props.put("session.timeout.ms", "30000");
+        
         //poll的数量限制
-        //props.put("max.poll.records", "100");
+        props.put("max.poll.records", "100");
 
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
@@ -127,13 +136,24 @@ public class ConsumerBase extends HttpServlet{
 			            	}else{
 			            		System.out.println("==============数据库已存在值=============");
 			            	}*/
+		            		List<Monitor> list = JSON.parseArray(record.value(),Monitor.class); 
+		            		for (Monitor monitor : list) {
+								monitor.setEquipCode(record.key());
+		            			System.out.println(monitor);
+								//不存在才计算插入
+				            	if(!monitorService.isExist(monitor.getEquipCode(), monitor.getCollectTime())){
+				            		monitorService.insertMonitor(calculateService.getResult(monitor));
+				            	}else{
+				            		System.out.println("==============数据库已存在值(equipCode:"+monitor.getEquipCode()+",collectTime:"+monitor.getCollectTime().getTimeInMillis()+")=============");
+				            	}
+							}
 			                System.out.printf("offset = %d, key = %s, value = %s", record.offset(), record.key(), record.value()+"\n");
 		            	}catch(Exception e){
 		            		e.printStackTrace();
 		            	}
 		            }
-		            LOGGER.debug("处理完成，手动提交offset");
-		            consumer.commitSync();
+		           // LOGGER.debug("处理完成，手动提交offset");
+		            //consumer.commitSync();
 		        }
 			}
         }).start();

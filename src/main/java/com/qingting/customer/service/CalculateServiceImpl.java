@@ -20,6 +20,7 @@ import com.qingting.customer.common.pojo.cache.EquipParam;
 import com.qingting.customer.common.pojo.common.FilterOrder;
 import com.qingting.customer.common.pojo.common.FormulaVariate;
 import com.qingting.customer.common.pojo.hbasedo.Equip;
+import com.qingting.customer.common.pojo.hbasedo.Filter;
 import com.qingting.customer.common.pojo.hbasedo.FilterGroup;
 import com.qingting.customer.common.pojo.hbasedo.Formula;
 import com.qingting.customer.common.pojo.hbasedo.MicroFormula;
@@ -77,11 +78,56 @@ public class CalculateServiceImpl implements CalculateService {
 	@Override
 	public Monitor getResult(Monitor monitor) {
 		EquipParam equipParam=getParam(monitor.getEquipCode());
-		Monitor hisMonitor = monitorRedisCache.get("monitor/"+monitor.getEquipCode());
-		System.out.println("历史hisMonitor:"+hisMonitor);
-		Monitor newMonitor = compute(equipParam,hisMonitor,monitor);
-		monitorRedisCache.set("monitor/"+monitor.getEquipCode(), newMonitor);
-		return newMonitor;
+		if(equipParam!=null){
+			/****************寿命和预警计算*****************/
+			Monitor hisMonitor = monitorRedisCache.get("monitor/"+monitor.getEquipCode());
+			System.out.println("历史hisMonitor:"+hisMonitor);
+			Monitor newMonitor = compute(equipParam,hisMonitor,monitor);
+			monitorRedisCache.set("monitor/"+monitor.getEquipCode(), newMonitor);
+			
+			/****************预警判断************/
+			System.out.println("newMonitor:"+newMonitor);
+			Equip equip = CacheUtil.getEquip(newMonitor.getEquipCode());
+			System.out.println("equip:"+equip);
+			FilterGroup filterGroup = CacheUtil.getFilterGroup(equip.getFilterGroupId());
+			System.out.println("filterGroup:"+filterGroup);
+			
+			//第一级滤芯寿命到期
+			Filter oneFilter = CacheUtil.getFilter(filterGroup.getOneFilterId());
+			System.out.println("filter:"+oneFilter);
+			if(newMonitor.getOneResult()>oneFilter.getLifeTime()){
+				
+			}
+			//第二级滤芯寿命到期
+			Filter twoFilter = CacheUtil.getFilter(filterGroup.getTwoFilterId());
+			if(newMonitor.getTwoResult()>twoFilter.getId()){
+				
+			}
+			//第三级滤芯寿命到期
+			Filter threeFilter = CacheUtil.getFilter(filterGroup.getThreeFilterId());
+			if(newMonitor.getThreeResult()>threeFilter.getLifeTime()){
+				
+			}		
+			//第四级滤芯寿命到期
+			Filter fourFilter = CacheUtil.getFilter(filterGroup.getFourFilterId());
+			if(newMonitor.getFourResult()>fourFilter.getLifeTime()){
+				
+			}
+			//第五级滤芯寿命到期
+			Filter fiveFilter = CacheUtil.getFilter(filterGroup.getFiveFilterId());
+			if(newMonitor.getFiveResult()>fiveFilter.getLifeTime()){
+				
+			}
+			//微生物超标
+			MicroFormula microFormula = CacheUtil.getMicroFormula(filterGroup.getMicroId());
+			if(newMonitor.getMicroResult()>microFormula.getLimit()){
+				
+			}
+			
+			return newMonitor;
+		}else{
+			return monitor;
+		}
 	}
 	private Monitor compute(EquipParam equipParam,Monitor hisMonitor,Monitor monitor){
 		
@@ -211,33 +257,39 @@ public class CalculateServiceImpl implements CalculateService {
 		EquipParam equipParam=new EquipParam();
 		
 		Equip equip = CacheUtil.getEquip(equipCode);
-		WaterArea waterArea = CacheUtil.getWaterArea(equip.getWaterAreaId());
-		WaterQuality waterQuality = CacheUtil.getWaterQuality(waterArea.getId());
 		
-		equipParam.setChlorine(waterQuality.getChlorine());
-		equipParam.setTurbidity(waterQuality.getTurbidity());
+		if(equip.getUserId()!=null && equip.getUserId()>0){
 		
-		FilterGroup filterGroup = CacheUtil.getFilterGroup(equip.getFilterGroupId());
-		
-		Formula oneFormula = CacheUtil.getFormula(filterGroup.getOneFilterId(), FilterOrder.ONE.getOrder());
-		equipParam.setOneFormula(oneFormula.getFormula());
-		
-		Formula twoFormula = CacheUtil.getFormula(filterGroup.getTwoFilterId(), FilterOrder.TWO.getOrder());
-		equipParam.setTwoFormula(twoFormula.getFormula());
-		
-		Formula threeFormula = CacheUtil.getFormula(filterGroup.getThreeFilterId(), FilterOrder.THREE.getOrder());
-		equipParam.setThreeFormula(threeFormula.getFormula());
-		
-		Formula fourFormula = CacheUtil.getFormula(filterGroup.getFourFilterId(), FilterOrder.FOUR.getOrder());
-		equipParam.setFourFormula(fourFormula.getFormula());
-		
-		Formula fiveFormula = CacheUtil.getFormula(filterGroup.getFiveFilterId(), FilterOrder.FIVE.getOrder());
-		equipParam.setFiveFormula(fiveFormula.getFormula());
-		
-		MicroFormula microFormula = CacheUtil.getMicroFormula(filterGroup.getMicroId());
-		equipParam.setMicroFormula(microFormula.getFormula());
-		
-		return equipParam;
+			WaterArea waterArea = CacheUtil.getWaterArea(equip.getWaterAreaId());
+			WaterQuality waterQuality = CacheUtil.getWaterQuality(waterArea.getId());
+			
+			equipParam.setChlorine(waterQuality.getChlorine());
+			equipParam.setTurbidity(waterQuality.getTurbidity());
+			
+			FilterGroup filterGroup = CacheUtil.getFilterGroup(equip.getFilterGroupId());
+			
+			Formula oneFormula = CacheUtil.getFormula(filterGroup.getOneFilterId(), FilterOrder.ONE.getOrder());
+			equipParam.setOneFormula(oneFormula.getFormula());
+			
+			Formula twoFormula = CacheUtil.getFormula(filterGroup.getTwoFilterId(), FilterOrder.TWO.getOrder());
+			equipParam.setTwoFormula(twoFormula.getFormula());
+			
+			Formula threeFormula = CacheUtil.getFormula(filterGroup.getThreeFilterId(), FilterOrder.THREE.getOrder());
+			equipParam.setThreeFormula(threeFormula.getFormula());
+			
+			Formula fourFormula = CacheUtil.getFormula(filterGroup.getFourFilterId(), FilterOrder.FOUR.getOrder());
+			equipParam.setFourFormula(fourFormula.getFormula());
+			
+			Formula fiveFormula = CacheUtil.getFormula(filterGroup.getFiveFilterId(), FilterOrder.FIVE.getOrder());
+			equipParam.setFiveFormula(fiveFormula.getFormula());
+			
+			MicroFormula microFormula = CacheUtil.getMicroFormula(filterGroup.getMicroId());
+			equipParam.setMicroFormula(microFormula.getFormula());
+			
+			return equipParam;
+		}else{
+			return null;
+		}
 		/*//查设备
 		Equip equip = equipRedisCache.get("equip/"+equipCode);
 		if(equip==null){
